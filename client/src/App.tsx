@@ -1,30 +1,23 @@
-import { Navigate, Route, Routes } from "react-router";
-import ProtectedRoute from "./components/ProtectedRoute";
-import AdminRoute from "./components/AdminRoute";
-import Layout from "./components/Layout";
-import LoginPage from "./pages/LoginPage";
-import HomePage from "./pages/HomePage";
-import UsersPage from "./pages/UsersPage";
-import TicketsPage from "./pages/TicketsPage";
-import TicketDetailPage from "./pages/TicketDetailPage";
+import { useEffect, useState } from 'react'
+import type { HealthResponse } from 'shared/api-types'
+import './App.css'
 
 function App() {
+  const [status, setStatus] = useState('Loading...')
+
+  useEffect(() => {
+    fetch('/api/health')
+      .then((res) => res.json() as Promise<HealthResponse>)
+      .then((data) => setStatus(data.status))
+      .catch(() => setStatus('Failed to reach the API'))
+  }, [])
+
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route element={<ProtectedRoute />}>
-        <Route element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/tickets" element={<TicketsPage />} />
-          <Route path="/tickets/:id" element={<TicketDetailPage />} />
-          <Route element={<AdminRoute />}>
-            <Route path="/users" element={<UsersPage />} />
-          </Route>
-        </Route>
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
+    <section id="center">
+      <h1>Helpdesk</h1>
+      <p>API status: {status}</p>
+    </section>
+  )
 }
 
-export default App;
+export default App

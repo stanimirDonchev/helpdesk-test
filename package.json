@@ -1,15 +1,13 @@
 {
   "name": "helpdesk",
   "private": true,
-  "workspaces": ["client", "server", "core"],
+  "workspaces": ["client", "server", "shared"],
   "scripts": {
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "dev:client": "bun run --cwd client dev",
+    "dev:server": "bun run --cwd server dev",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
-    "@types/node": "^25.2.3",
-    "dotenv": "^17.3.1"
+    "@playwright/test": "^1.58.2"
   }
 }
