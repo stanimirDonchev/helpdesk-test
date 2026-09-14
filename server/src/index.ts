@@ -1,12 +1,15 @@
+import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
-import express from "express";
+import express, { type RequestHandler } from "express";
 import type { HealthResponse } from "shared/api-types";
+import { auth } from "./auth.ts";
 import { prisma } from "./db.ts";
 
 const app = express();
 const port = process.env.PORT ?? 3001;
 
 app.use(cors());
+app.all("/api/auth/*splat", toNodeHandler(auth) as unknown as RequestHandler);
 app.use(express.json());
 
 app.get("/api/health", async (_req, res) => {
