@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import App from './App'
+import { HomePage } from './HomePage'
 
 beforeEach(() => {
   vi.stubGlobal(
@@ -18,7 +18,7 @@ afterEach(() => {
 })
 
 test('renders the heading and the API status once loaded', async () => {
-  render(<App />)
+  render(<HomePage />)
 
   expect(screen.getByRole('heading', { name: 'Helpdesk' })).toBeInTheDocument()
   expect(await screen.findByText('API status: ok')).toBeInTheDocument()

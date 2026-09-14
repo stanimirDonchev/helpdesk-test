@@ -12,6 +12,12 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 export const authConfig = {
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: { enabled: true, disableSignUp: true },
+  // The Vite dev server (client) and this API run on different origins;
+  // Better Auth rejects cookie-bearing requests from origins not listed here.
+  trustedOrigins: (process.env.TRUSTED_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   user: {
     additionalFields: {
       role: {
