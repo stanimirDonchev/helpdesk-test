@@ -1,13 +1,9 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { UserRole } from "shared/user-types";
 import { prisma } from "./db.ts";
 
-export const UserRole = {
-  admin: "admin",
-  agent: "agent",
-} as const;
-
-export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+export { UserRole };
 
 export const authConfig = {
   database: prismaAdapter(prisma, { provider: "postgresql" }),

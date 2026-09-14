@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { UserRole } from 'shared/user-types'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { authClient } from '../lib/auth-client'
@@ -17,7 +18,17 @@ export function NavBar() {
 
   return (
     <nav className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-background px-6 py-3.5">
-      <span className="text-[1.0625rem] font-bold tracking-tight text-foreground">Helpdesk</span>
+      <div className="flex items-center gap-6">
+        <span className="text-[1.0625rem] font-bold tracking-tight text-foreground">Helpdesk</span>
+        {session?.user.role === UserRole.admin && (
+          <Link
+            to="/users"
+            className="text-[0.9375rem] font-medium text-muted-foreground hover:text-foreground"
+          >
+            Users
+          </Link>
+        )}
+      </div>
       {session && (
         <div className="flex items-center gap-2.5">
           <Avatar size="sm">
