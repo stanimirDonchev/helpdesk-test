@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import type { HealthResponse } from "shared/api-types";
+import { prisma } from "./db.ts";
 
 const app = express();
 const port = process.env.PORT ?? 3001;
@@ -8,9 +9,16 @@ const port = process.env.PORT ?? 3001;
 app.use(cors());
 app.use(express.json());
 
-app.get("/api/health", (_req, res) => {
-  const body: HealthResponse = { status: "ok" };
-  res.json(body);
+app.get("/api/health", async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    const body: HealthResponse = { status: "ok" };
+    res.json(body);
+  } catch (error) {
+    console.error("Database health check failed:", error);
+    const body: HealthResponse = { status: "error" };
+    res.status(503).json(body);
+  }
 });
 
 app.listen(port, () => {
