@@ -3,8 +3,11 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Navigate, useNavigate } from 'react-router'
 import { z } from 'zod'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { authClient } from '../lib/auth-client'
-import './LoginPage.css'
 
 const loginSchema = z.object({
   email: z.email({ error: 'Enter a valid email address' }),
@@ -38,55 +41,59 @@ export function LoginPage() {
   }
 
   return (
-    <section className="login-page">
-      <div className="login-card">
-        <h1>Helpdesk</h1>
-        <p className="login-subtitle">Sign in to manage tickets</p>
+    <section className="flex min-h-screen items-center justify-center p-6">
+      <Card className="w-full max-w-90">
+        <CardHeader>
+          <CardTitle className="text-xl">Helpdesk</CardTitle>
+          <CardDescription>Sign in to manage tickets</CardDescription>
+        </CardHeader>
 
-        <form className="login-form" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="field">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              aria-invalid={errors.email ? 'true' : 'false'}
-              {...register('email')}
-            />
-            {errors.email && (
-              <p className="field-error" role="alert">
-                {errors.email.message}
+        <CardContent>
+          <form className="flex flex-col gap-4.5" onSubmit={handleSubmit(onSubmit)} noValidate>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                aria-invalid={errors.email ? 'true' : 'false'}
+                {...register('email')}
+              />
+              {errors.email && (
+                <p className="text-[0.8125rem] text-destructive" role="alert">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                aria-invalid={errors.password ? 'true' : 'false'}
+                {...register('password')}
+              />
+              {errors.password && (
+                <p className="text-[0.8125rem] text-destructive" role="alert">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {formError && (
+              <p className="rounded-lg bg-destructive/10 px-3 py-2.5 text-sm text-destructive" role="alert">
+                {formError}
               </p>
             )}
-          </div>
 
-          <div className="field">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              aria-invalid={errors.password ? 'true' : 'false'}
-              {...register('password')}
-            />
-            {errors.password && (
-              <p className="field-error" role="alert">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
-
-          {formError && (
-            <p className="form-error" role="alert">
-              {formError}
-            </p>
-          )}
-
-          <button type="submit" className="btn btn-primary login-submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
-      </div>
+            <Button type="submit" className="mt-1 w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Signing in…' : 'Sign in'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </section>
   )
 }
