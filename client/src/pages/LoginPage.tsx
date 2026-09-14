@@ -1,67 +1,92 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import type { FormEvent } from 'react'
+import { useForm } from 'react-hook-form'
 import { Navigate, useNavigate } from 'react-router'
+import { z } from 'zod'
 import { authClient } from '../lib/auth-client'
 import './LoginPage.css'
+
+const loginSchema = z.object({
+  email: z.email({ error: 'Enter a valid email address' }),
+  password: z.string().min(1, { error: 'Password is required' }),
+})
+
+type LoginFormValues = z.infer<typeof loginSchema>
 
 export function LoginPage() {
   const navigate = useNavigate()
   const { data: session, isPending } = authClient.useSession()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formError, setFormError] = useState('')
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) })
 
   if (isPending) return null
   if (session) return <Navigate to="/" replace />
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setError('')
+  const onSubmit = async (values: LoginFormValues) => {
+    setFormError('')
 
-    await authClient.signIn.email(
-      { email, password },
-      {
-        onRequest: () => setIsSubmitting(true),
-        onSuccess: () => navigate('/', { replace: true }),
-        onError: (ctx) => {
-          setIsSubmitting(false)
-          setError(ctx.error.message || 'Failed to sign in')
-        },
+    await authClient.signIn.email(values, {
+      onSuccess: () => navigate('/', { replace: true }),
+      onError: (ctx) => {
+        setFormError(ctx.error.message || 'Failed to sign in')
       },
-    )
+    })
   }
 
   return (
     <section className="login-page">
-      <h1>Helpdesk</h1>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
-        />
+      <div className="login-card">
+        <h1>Helpdesk</h1>
+        <p className="login-subtitle">Sign in to manage tickets</p>
 
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-        />
+        <form className="login-form" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className="field">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              aria-invalid={errors.email ? 'true' : 'false'}
+              {...register('email')}
+            />
+            {errors.email && (
+              <p className="field-error" role="alert">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
 
-        {error && <p role="alert">{error}</p>}
+          <div className="field">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              aria-invalid={errors.password ? 'true' : 'false'}
+              {...register('password')}
+            />
+            {errors.password && (
+              <p className="field-error" role="alert">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
 
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Signing in…' : 'Sign in'}
-        </button>
-      </form>
+          {formError && (
+            <p className="form-error" role="alert">
+              {formError}
+            </p>
+          )}
+
+          <button type="submit" className="btn btn-primary login-submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+      </div>
     </section>
   )
 }

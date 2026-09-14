@@ -65,6 +65,18 @@ test('shows an error message when sign in fails', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('Invalid email or password')
 })
 
+test('shows validation errors and does not call sign in when fields are empty', async () => {
+  const user = userEvent.setup()
+
+  renderLoginPage()
+
+  await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+  expect(await screen.findByText('Enter a valid email address')).toBeInTheDocument()
+  expect(screen.getByText('Password is required')).toBeInTheDocument()
+  expect(signInEmailMock).not.toHaveBeenCalled()
+})
+
 test('redirects an already-signed-in user straight to the homepage', () => {
   useSessionMock.mockReturnValue({ data: { user: { name: 'Admin' } }, isPending: false })
 

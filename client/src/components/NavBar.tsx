@@ -19,8 +19,11 @@ export function NavBar() {
       <span className="nav-bar-brand">Helpdesk</span>
       {session && (
         <div className="nav-bar-user">
-          <span>{session.user.name}</span>
-          <button type="button" onClick={handleSignOut}>
+          <span className="nav-bar-avatar" aria-hidden="true">
+            {session.user.name.charAt(0).toUpperCase()}
+          </span>
+          <span className="nav-bar-name">{session.user.name}</span>
+          <button type="button" className="btn btn-ghost" onClick={handleSignOut}>
             Sign out
           </button>
         </div>

@@ -21,5 +21,6 @@ test('renders the heading and the API status once loaded', async () => {
   render(<HomePage />)
 
   expect(screen.getByRole('heading', { name: 'Helpdesk' })).toBeInTheDocument()
-  expect(await screen.findByText('API status: ok')).toBeInTheDocument()
+  expect(screen.getByText('API status')).toBeInTheDocument()
+  expect(await screen.findByText('ok')).toBeInTheDocument()
 })

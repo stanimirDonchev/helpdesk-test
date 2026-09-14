@@ -12,10 +12,18 @@ export function HomePage() {
       .catch(() => setStatus('Failed to reach the API'))
   }, [])
 
+  const statusVariant = status === 'ok' ? 'success' : status === 'Loading...' ? 'pending' : 'error'
+
   return (
-    <section id="center">
+    <section className="home-page">
       <h1>Helpdesk</h1>
-      <p>API status: {status}</p>
+      <p className="home-status">
+        API status
+        <span className={`status-badge status-badge--${statusVariant}`}>
+          <span className="status-dot" aria-hidden="true" />
+          {status}
+        </span>
+      </p>
     </section>
   )
 }
