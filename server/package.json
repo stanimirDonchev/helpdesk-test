@@ -7,6 +7,7 @@
     "dev": "bun --watch src/index.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:test": "DATABASE_URL=postgresql://helpdesk:helpdesk@localhost:5432/helpdesk_test prisma migrate deploy",
     "db:seed": "bun prisma/seed.ts"
   },
   "dependencies": {

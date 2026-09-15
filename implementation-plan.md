@@ -11,7 +11,7 @@ Reference: `project-scope.md`, `tech-stack.md`. Phases are meant to be built rou
 - [ ] Prisma init in `server`, connect to local Postgres
 - [ ] `.env.example` for client and server
 - [ ] Vitest + Testing Library wired up in `client` with a smoke test
-- [ ] Playwright skeleton (`e2e` workspace) with a trivial passing test
+- [x] Playwright skeleton (`e2e` workspace) with a trivial passing test
 
 ## Phase 1 — Auth & user management
 

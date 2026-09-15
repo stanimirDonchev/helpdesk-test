@@ -19,8 +19,11 @@ export const authConfig = {
   emailAndPassword: { enabled: true, disableSignUp: true },
   // Rate limiting defaults to disabled outside production; the account set here
   // is small and fixed (no public sign-up), so login is a brute-force target
-  // in every environment, not just prod.
-  rateLimit: { enabled: true },
+  // in every environment, not just prod. DISABLE_RATE_LIMIT is an explicit,
+  // narrowly-scoped escape hatch for e2e test runs only (set in
+  // playwright.config.ts's webServer env) so repeated login attempts across
+  // a test suite don't get throttled.
+  rateLimit: { enabled: process.env.DISABLE_RATE_LIMIT !== "true" },
   // The Vite dev server (client) and this API run on different origins;
   // Better Auth rejects cookie-bearing requests from origins not listed here.
   trustedOrigins: (process.env.TRUSTED_ORIGINS ?? "")

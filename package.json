@@ -5,7 +5,7 @@
   "scripts": {
     "dev:client": "bun run --cwd client dev",
     "dev:server": "bun run --cwd server dev",
-    "test:e2e": "playwright test"
+    "test:e2e": "docker compose up -d postgres && bun run --cwd server db:migrate:test && playwright test"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2"
