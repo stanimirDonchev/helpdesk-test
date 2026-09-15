@@ -4,26 +4,26 @@ Reference: `project-scope.md`, `tech-stack.md`. Phases are meant to be built rou
 
 ## Phase 0 — Project scaffolding
 
-- [ ] Init Bun workspace monorepo (`client` / `server` / `shared`)
-- [ ] `shared` package: Zod schemas + enums for ticket status, category, role, sender type
-- [ ] Shared TS/ESLint/Prettier config across workspaces
-- [ ] Postgres + `pgvector` via docker-compose for local dev
-- [ ] Prisma init in `server`, connect to local Postgres
-- [ ] `.env.example` for client and server
-- [ ] Vitest + Testing Library wired up in `client` with a smoke test
+- [x] Init Bun workspace monorepo (`client` / `server` / `shared`)
+- [ ] `shared` package: Zod schemas + enums for ticket status, category, role, sender type — only the `role` enum exists so far (`shared/src/user-types.ts`, plain const object, not a Zod schema); ticket status/category/sender type not started (Phase 2/4 territory)
+- [ ] Shared TS/ESLint/Prettier config across workspaces — not present: no shared/base `tsconfig`, no ESLint anywhere (client uses `oxlint` standalone instead, per CLAUDE.md), no Prettier config
+- [x] Postgres + `pgvector` via docker-compose for local dev
+- [x] Prisma init in `server`, connect to local Postgres
+- [x] `.env.example` for client and server
+- [x] Vitest + Testing Library wired up in `client` with a smoke test
 - [x] Playwright skeleton (`e2e` workspace) with a trivial passing test
 
 ## Phase 1 — Auth & user management
 
-- [ ] Prisma schema: `User` (role: admin/agent, active/deactivated)
-- [ ] Integrate better-auth (email/password) on the server
-- [ ] Seed script: create the initial Admin user
-- [ ] better-auth client + session hook on the frontend
-- [ ] Login page
-- [ ] `ProtectedRoute` / `AdminRoute` wrappers
-- [ ] API: create/list/deactivate agent (admin-only)
-- [ ] UI: Users page (list, create-agent form, deactivate action)
-- [ ] App shell: layout, nav, role-aware menu
+- [ ] Prisma schema: `User` (role: admin/agent, active/deactivated) — `role` field is on the model; no `active`/`deactivated` field yet
+- [x] Integrate better-auth (email/password) on the server
+- [x] Seed script: create the initial Admin user
+- [x] better-auth client + session hook on the frontend
+- [x] Login page
+- [x] `ProtectedRoute` / `AdminRoute` wrappers
+- [ ] API: create/list/deactivate agent (admin-only) — not started; `server/src/index.ts` only has `/api/health` and the mounted auth handler
+- [ ] UI: Users page (list, create-agent form, deactivate action) — `UsersPage.tsx` is currently just a heading placeholder
+- [x] App shell: layout, nav, role-aware menu
 
 ## Phase 2 — Core ticket data & CRUD (no AI yet)
 
