@@ -41,9 +41,10 @@ bun run --cwd server db:migrate    # prisma migrate dev
 bun run --cwd client test              # vitest run (unit/component)
 bun run --cwd client test:watch        # vitest watch mode
 bun run --cwd client test -- App.test.tsx   # single file
-bun run test:e2e                       # playwright, from root — isolated test DB + dedicated ports, safe alongside a live dev session
+bun run test:e2e                       # playwright, from root — isolated test DB + dedicated ports, safe alongside a live dev session; opens an HTML report when done
+bun run test:e2e:ui                    # same isolated setup, but opens Playwright's interactive UI mode instead of running headless
 ```
-For writing or modifying Playwright e2e tests (`e2e/tests/`), use the `e2e-test-writer` subagent — it owns the full e2e infrastructure detail (isolated test DB, dedicated ports, auth/rate-limit setup).
+For writing or modifying Playwright e2e tests (`e2e/tests/`), use the `e2e-test-writer` subagent — it owns the full e2e infrastructure detail (isolated test DB, dedicated ports, auth/rate-limit setup, seeded test users).
 
 **Build/lint:**
 ```

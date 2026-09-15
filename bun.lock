@@ -6,6 +6,7 @@
       "name": "helpdesk",
       "devDependencies": {
         "@playwright/test": "^1.58.2",
+        "@types/node": "^24.13.3",
       },
     },
     "client": {

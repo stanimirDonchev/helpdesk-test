@@ -8,7 +8,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:test": "DATABASE_URL=postgresql://helpdesk:helpdesk@localhost:5432/helpdesk_test prisma migrate deploy",
-    "db:seed": "bun prisma/seed.ts"
+    "db:seed": "bun prisma/seed.ts",
+    "db:seed:test": "DATABASE_URL=postgresql://helpdesk:helpdesk@localhost:5432/helpdesk_test bun prisma/seed-e2e.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.3.0",
