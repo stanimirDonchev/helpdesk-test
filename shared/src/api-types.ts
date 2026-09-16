@@ -15,3 +15,13 @@ export interface UserSummary {
 export interface UsersListResponse {
   users: UserSummary[];
 }
+
+export interface CreateUserRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface CreateUserResponse {
+  user: UserSummary;
+}

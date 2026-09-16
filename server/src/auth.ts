@@ -43,3 +43,16 @@ export const authConfig = {
 } satisfies BetterAuthOptions;
 
 export const auth = betterAuth(authConfig);
+
+// Sign-up is disabled on the main `auth` instance (no public registration), so
+// callers that need to create a user server-side (seeding, admin-created
+// users) get a one-off instance with it re-enabled, to reuse Better Auth's
+// own password hashing and user/account creation instead of duplicating it.
+export function createSignUpAuth(
+  overrides?: Partial<NonNullable<BetterAuthOptions["emailAndPassword"]>>,
+) {
+  return betterAuth({
+    ...authConfig,
+    emailAndPassword: { ...authConfig.emailAndPassword, disableSignUp: false, ...overrides },
+  });
+}
