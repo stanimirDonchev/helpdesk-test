@@ -1,24 +1,15 @@
-import { render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { screen } from '@testing-library/react'
+import axios from 'axios'
+import { expect, test, vi } from 'vitest'
+import { renderWithQueryClient } from '../test/render-with-query'
 import { HomePage } from './HomePage'
 
-beforeEach(() => {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve({ status: 'ok' }),
-      }),
-    ),
-  )
-})
-
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
+vi.mock('axios')
 
 test('renders the heading and the API status once loaded', async () => {
-  render(<HomePage />)
+  vi.mocked(axios.get).mockResolvedValue({ data: { status: 'ok' } })
+
+  renderWithQueryClient(<HomePage />)
 
   expect(screen.getByRole('heading', { name: 'Helpdesk' })).toBeInTheDocument()
   expect(screen.getByText('API status')).toBeInTheDocument()

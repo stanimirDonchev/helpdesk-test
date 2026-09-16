@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
 import type { HealthResponse } from 'shared/api-types'
 
 export function HomePage() {
-  const [status, setStatus] = useState('Loading...')
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['health'],
+    queryFn: () => axios.get<HealthResponse>('/api/health').then((res) => res.data.status),
+  })
 
-  useEffect(() => {
-    fetch('/api/health')
-      .then((res) => res.json() as Promise<HealthResponse>)
-      .then((data) => setStatus(data.status))
-      .catch(() => setStatus('Failed to reach the API'))
-  }, [])
+  const status = isPending ? 'Loading...' : isError ? 'Failed to reach the API' : data
 
   const statusVariant = status === 'ok' ? 'success' : status === 'Loading...' ? 'pending' : 'error'
 

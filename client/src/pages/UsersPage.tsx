@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import type { UserSummary, UsersListResponse } from 'shared/api-types'
+import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
+import type { UsersListResponse } from 'shared/api-types'
 import { UserRole } from 'shared/user-types'
 import {
   Table,
@@ -10,42 +11,25 @@ import {
   TableRow,
 } from '../components/ui/table'
 
-type LoadState = 'loading' | 'loaded' | 'error'
-
 export function UsersPage() {
-  const [users, setUsers] = useState<UserSummary[]>([])
-  const [state, setState] = useState<LoadState>('loading')
-
-  useEffect(() => {
-    fetch('/api/users')
-      .then((res) => {
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`)
-        return res.json() as Promise<UsersListResponse>
-      })
-      .then((data) => {
-        setUsers(data.users)
-        setState('loaded')
-      })
-      .catch(() => setState('error'))
-  }, [])
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => axios.get<UsersListResponse>('/api/users').then((res) => res.data.users),
+  })
 
   return (
     <section className="mx-auto flex max-w-240 flex-col gap-4 px-6 py-10">
       <h1 className="text-xl font-semibold tracking-tight text-foreground">Users</h1>
 
-      {state === 'loading' && (
-        <p className="text-[0.9375rem] text-muted-foreground">Loading users…</p>
-      )}
+      {isPending && <p className="text-[0.9375rem] text-muted-foreground">Loading users…</p>}
 
-      {state === 'error' && (
-        <p className="text-[0.9375rem] text-destructive">Failed to load users.</p>
-      )}
+      {isError && <p className="text-[0.9375rem] text-destructive">Failed to load users.</p>}
 
-      {state === 'loaded' && users.length === 0 && (
+      {!isPending && !isError && data.length === 0 && (
         <p className="text-[0.9375rem] text-muted-foreground">No users found.</p>
       )}
 
-      {state === 'loaded' && users.length > 0 && (
+      {!isPending && !isError && data.length > 0 && (
         <div className="rounded-lg border border-border">
           <Table>
             <TableHeader>
@@ -57,7 +41,7 @@ export function UsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {data.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium text-foreground">{user.name}</TableCell>
                   <TableCell className="text-muted-foreground">{user.email}</TableCell>
