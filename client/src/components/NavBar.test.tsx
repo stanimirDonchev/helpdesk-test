@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
-import { afterEach, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { NavBar } from './NavBar'
 
 const { useSessionMock, signOutMock } = vi.hoisted(() => ({
@@ -26,10 +26,6 @@ function renderNavBar() {
   )
   render(<RouterProvider router={router} />)
 }
-
-afterEach(() => {
-  vi.clearAllMocks()
-})
 
 test('shows the signed-in user name and signs out', async () => {
   const user = userEvent.setup()

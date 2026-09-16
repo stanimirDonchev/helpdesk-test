@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { beforeEach, expect, test, vi } from 'vitest'
 import { LoginPage } from './LoginPage'
 
 const { useSessionMock, signInEmailMock } = vi.hoisted(() => ({
@@ -29,10 +29,6 @@ function renderLoginPage() {
 
 beforeEach(() => {
   useSessionMock.mockReturnValue({ data: null, isPending: false })
-})
-
-afterEach(() => {
-  vi.clearAllMocks()
 })
 
 test('redirects to the homepage once signed in', async () => {
