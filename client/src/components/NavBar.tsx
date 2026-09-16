@@ -19,7 +19,9 @@ export function NavBar() {
   return (
     <nav className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-background px-6 py-3.5">
       <div className="flex items-center gap-6">
-        <span className="text-[1.0625rem] font-bold tracking-tight text-foreground">Helpdesk</span>
+        <Link to="/" className="text-[1.0625rem] font-bold tracking-tight text-foreground">
+          Helpdesk
+        </Link>
         {session?.user.role === UserRole.admin && (
           <Link
             to="/users"

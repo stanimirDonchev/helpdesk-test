@@ -21,12 +21,12 @@ test('renders the list of users once loaded', async () => {
   expect(screen.getByText('ada@example.com')).toBeInTheDocument()
 })
 
-test('shows a loading state before the fetch resolves', () => {
+test('shows skeleton rows before the fetch resolves', () => {
   vi.mocked(axios.get).mockReturnValue(new Promise(() => {}))
 
-  renderWithQueryClient(<UsersPage />)
+  const { container } = renderWithQueryClient(<UsersPage />)
 
-  expect(screen.getByText('Loading users…')).toBeInTheDocument()
+  expect(container.querySelectorAll('[data-slot="skeleton"]').length).toBeGreaterThan(0)
 })
 
 test('shows an error state when the fetch fails', async () => {

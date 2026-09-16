@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import type { UsersListResponse } from 'shared/api-types'
 import { UserRole } from 'shared/user-types'
+import { Skeleton } from '../components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -10,6 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table'
+
+const SKELETON_ROWS = 5
 
 export function UsersPage() {
   const { data, isPending, isError } = useQuery({
@@ -21,7 +24,38 @@ export function UsersPage() {
     <section className="mx-auto flex max-w-240 flex-col gap-4 px-6 py-10">
       <h1 className="text-xl font-semibold tracking-tight text-foreground">Users</h1>
 
-      {isPending && <p className="text-[0.9375rem] text-muted-foreground">Loading users…</p>}
+      {isPending && (
+        <div className="rounded-lg border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Joined</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: SKELETON_ROWS }).map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <Skeleton className="h-4 w-32" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-48" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {isError && <p className="text-[0.9375rem] text-destructive">Failed to load users.</p>}
 
