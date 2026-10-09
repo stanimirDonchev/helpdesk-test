@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import type { UsersListResponse } from 'shared/api-types'
 import { UserRole } from 'shared/user-types'
+import { DeleteUserDialog } from './DeleteUserDialog'
 import { EditUserDialog } from './EditUserDialog'
 import { Skeleton } from '../components/ui/skeleton'
 import {
@@ -59,8 +60,11 @@ export function UsersTable() {
                 <TableCell>
                   <Skeleton className="h-4 w-20" />
                 </TableCell>
-                <TableCell className="text-right">
-                  <Skeleton className="ml-auto size-7 rounded-lg" />
+                <TableCell>
+                  <div className="flex justify-end gap-1">
+                    <Skeleton className="size-7 rounded-lg" />
+                    <Skeleton className="size-7 rounded-lg" />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -101,8 +105,11 @@ export function UsersTable() {
               <TableCell className="text-muted-foreground">
                 {new Date(user.createdAt).toLocaleDateString()}
               </TableCell>
-              <TableCell className="text-right">
-                <EditUserDialog user={user} />
+              <TableCell>
+                <div className="flex justify-end gap-1">
+                  <EditUserDialog user={user} />
+                  <DeleteUserDialog user={user} />
+                </div>
               </TableCell>
             </TableRow>
           ))}

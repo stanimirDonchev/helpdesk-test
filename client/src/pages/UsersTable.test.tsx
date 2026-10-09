@@ -1,11 +1,23 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axios from 'axios'
-import { expect, test, vi } from 'vitest'
+import { beforeEach, expect, test, vi } from 'vitest'
 import { renderWithQueryClient } from '../test/render-with-query'
 import { UsersTable } from './UsersTable'
 
 vi.mock('axios')
+
+// `DeleteUserDialog` hides itself on the signed-in user's own row, so the table
+// reads session state through its children.
+const { useSessionMock } = vi.hoisted(() => ({ useSessionMock: vi.fn() }))
+
+vi.mock('../lib/auth-client', () => ({
+  authClient: { useSession: useSessionMock },
+}))
+
+beforeEach(() => {
+  useSessionMock.mockReturnValue({ data: { user: { id: 'signed-in-admin', role: 'admin' } } })
+})
 
 const mockUsers = [
   { id: '1', name: 'Ada Admin', email: 'ada@example.com', role: 'admin', createdAt: '2024-01-01T00:00:00.000Z' },
@@ -122,4 +134,40 @@ test('opens the edit dialog populated with the clicked row', async () => {
   expect(screen.getByRole('heading', { name: 'Edit user' })).toBeInTheDocument()
   expect(screen.getByLabelText('Name')).toHaveValue('Gene Agent')
   expect(screen.getByLabelText('Email')).toHaveValue('gene@example.com')
+})
+
+test('renders a delete button for each user', async () => {
+  vi.mocked(axios.get).mockResolvedValue({ data: { users: mockUsers } })
+
+  renderWithQueryClient(<UsersTable />)
+  await screen.findByText('Ada Admin')
+
+  expect(screen.getByRole('button', { name: 'Delete Ada Admin' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Delete Gene Agent' })).toBeInTheDocument()
+})
+
+test('does not offer a delete button on the row of the signed-in user', async () => {
+  useSessionMock.mockReturnValue({ data: { user: { id: '1', role: 'admin' } } })
+  vi.mocked(axios.get).mockResolvedValue({ data: { users: mockUsers } })
+
+  renderWithQueryClient(<UsersTable />)
+  await screen.findByText('Ada Admin')
+
+  // Ada is the signed-in admin, so only her row loses the delete affordance.
+  expect(screen.queryByRole('button', { name: 'Delete Ada Admin' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Edit Ada Admin' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Delete Gene Agent' })).toBeInTheDocument()
+})
+
+test('opens the delete confirmation for the clicked row', async () => {
+  vi.mocked(axios.get).mockResolvedValue({ data: { users: mockUsers } })
+
+  const user = userEvent.setup()
+  renderWithQueryClient(<UsersTable />)
+  await screen.findByText('Gene Agent')
+
+  await user.click(screen.getByRole('button', { name: 'Delete Gene Agent' }))
+
+  expect(await screen.findByRole('heading', { name: 'Delete user' })).toBeInTheDocument()
+  expect(screen.getByText(/Gene Agent \(gene@example\.com\)/)).toBeInTheDocument()
 })

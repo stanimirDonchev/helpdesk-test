@@ -21,6 +21,14 @@ model User {
 
   role String @default("agent")
 
+  // Soft deletion: set instead of removing the row, so a departed user's
+  // history stays intact. Every read of `user` outside this field has to filter
+  // on `deletedAt: null`, and sign-in is blocked for a non-null value by the
+  // `session.create.before` hook in `src/auth.ts`. The unique index on `email`
+  // deliberately still covers deleted rows, so a deleted user's address stays
+  // taken rather than becoming re-registrable.
+  deletedAt DateTime?
+
   @@unique([email])
   @@map("user")
 }

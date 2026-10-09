@@ -1,6 +1,11 @@
 import { isAPIError } from "better-auth/api";
 import { Router, type ErrorRequestHandler } from "express";
-import type { CreateUserResponse, UpdateUserResponse, UsersListResponse } from "shared/api-types";
+import type {
+  CreateUserResponse,
+  DeleteUserResponse,
+  UpdateUserResponse,
+  UsersListResponse,
+} from "shared/api-types";
 import { createUserSchema, updateUserSchema } from "shared/user-validation";
 import type { UserRole } from "shared/user-types";
 import { auth, createSignUpAuth } from "../auth.ts";
@@ -12,6 +17,7 @@ export const usersRouter: Router = Router();
 
 usersRouter.get("/", requireAdmin, async (_req, res) => {
   const users = await prisma.user.findMany({
+    where: { deletedAt: null },
     select: { id: true, name: true, email: true, role: true, createdAt: true },
     orderBy: { name: "asc" },
   });
@@ -59,8 +65,13 @@ usersRouter.patch<{ id: string }>("/:id", requireAdmin, async (req, res) => {
   }
 
   const { id } = req.params;
-  const existing = await prisma.user.findUnique({ where: { id }, select: { id: true } });
-  if (!existing) {
+  const existing = await prisma.user.findUnique({
+    where: { id },
+    select: { deletedAt: true },
+  });
+  // A soft-deleted user is gone as far as this API is concerned, so editing one
+  // is a 404 rather than a silent write to a row nothing can see.
+  if (!existing || existing.deletedAt) {
     res.status(404).json({ error: "User not found" });
     return;
   }
@@ -111,6 +122,42 @@ usersRouter.patch<{ id: string }>("/:id", requireAdmin, async (req, res) => {
   }
 
   const body: UpdateUserResponse = {
+    user: { ...user, role: user.role as UserRole, createdAt: user.createdAt.toISOString() },
+  };
+  res.json(body);
+});
+
+usersRouter.delete<{ id: string }>("/:id", requireAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  // Deleting yourself would revoke your own sessions and sign you out of the
+  // only role that can undo it, so it's refused outright. Other admins can be
+  // deleted -- the guard is about self-lockout, not about protecting the role.
+  if (id === req.session!.user.id) {
+    res.status(403).json({ error: "You cannot delete your own account" });
+    return;
+  }
+
+  const existing = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true, name: true, email: true, role: true, createdAt: true, deletedAt: true },
+  });
+  // Already-deleted counts as absent, which also makes a double submit a no-op
+  // rather than quietly refreshing `deletedAt`.
+  if (!existing || existing.deletedAt) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  // Set the flag *before* revoking sessions: from this moment the
+  // `session.create.before` hook in `src/auth.ts` refuses to mint a new
+  // session for this user, so a sign-in racing the revoke below can't slip
+  // through and hand them a fresh session.
+  await prisma.user.update({ where: { id }, data: { deletedAt: new Date() } });
+  await prisma.session.deleteMany({ where: { userId: id } });
+
+  const { deletedAt: _deletedAt, ...user } = existing;
+  const body: DeleteUserResponse = {
     user: { ...user, role: user.role as UserRole, createdAt: user.createdAt.toISOString() },
   };
   res.json(body);

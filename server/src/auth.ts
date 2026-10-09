@@ -1,4 +1,5 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { APIError } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { UserRole } from "shared/user-types";
 import { prisma } from "./db.ts";
@@ -30,6 +31,25 @@ export const authConfig = {
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
+  databaseHooks: {
+    session: {
+      create: {
+        // A soft-deleted user keeps their row and their credential account, so
+        // nothing in Better Auth's own model stops them signing back in.
+        // Session creation is the one choke point every sign-in path goes
+        // through -- the admin plugin gates banned users the same way.
+        before: async (session) => {
+          const user = await prisma.user.findUnique({
+            where: { id: session.userId },
+            select: { deletedAt: true },
+          });
+          if (user?.deletedAt) {
+            throw new APIError("FORBIDDEN", { message: "This account has been deleted" });
+          }
+        },
+      },
+    },
+  },
   user: {
     additionalFields: {
       role: {

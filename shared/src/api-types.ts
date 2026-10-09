@@ -36,3 +36,7 @@ export interface UpdateUserRequest {
 export interface UpdateUserResponse {
   user: UserSummary;
 }
+
+export interface DeleteUserResponse {
+  user: UserSummary;
+}
