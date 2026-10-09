@@ -25,3 +25,14 @@ export interface CreateUserRequest {
 export interface CreateUserResponse {
   user: UserSummary;
 }
+
+export interface UpdateUserRequest {
+  name: string;
+  email: string;
+  /** Omit entirely to leave the current password unchanged. */
+  password?: string;
+}
+
+export interface UpdateUserResponse {
+  user: UserSummary;
+}

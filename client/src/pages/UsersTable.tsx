@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import type { UsersListResponse } from 'shared/api-types'
 import { UserRole } from 'shared/user-types'
+import { EditUserDialog } from './EditUserDialog'
 import { Skeleton } from '../components/ui/skeleton'
 import {
   Table,
@@ -14,6 +15,24 @@ import {
 
 const SKELETON_ROWS = 5
 
+// Rendered by both the loading and the loaded branch, so the column list only
+// has to be kept in sync in one place.
+function UsersTableHead() {
+  return (
+    <TableHeader>
+      <TableRow>
+        <TableHead>Name</TableHead>
+        <TableHead>Email</TableHead>
+        <TableHead>Role</TableHead>
+        <TableHead>Joined</TableHead>
+        <TableHead className="text-right">
+          <span className="sr-only">Actions</span>
+        </TableHead>
+      </TableRow>
+    </TableHeader>
+  )
+}
+
 export function UsersTable() {
   const { data, isPending, isError } = useQuery({
     queryKey: ['users'],
@@ -24,14 +43,7 @@ export function UsersTable() {
     return (
       <div className="rounded-lg border border-border">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Joined</TableHead>
-            </TableRow>
-          </TableHeader>
+          <UsersTableHead />
           <TableBody>
             {Array.from({ length: SKELETON_ROWS }).map((_, index) => (
               <TableRow key={index}>
@@ -46,6 +58,9 @@ export function UsersTable() {
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-20" />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Skeleton className="ml-auto size-7 rounded-lg" />
                 </TableCell>
               </TableRow>
             ))}
@@ -66,14 +81,7 @@ export function UsersTable() {
   return (
     <div className="rounded-lg border border-border">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Joined</TableHead>
-          </TableRow>
-        </TableHeader>
+        <UsersTableHead />
         <TableBody>
           {data.map((user) => (
             <TableRow key={user.id}>
@@ -92,6 +100,9 @@ export function UsersTable() {
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {new Date(user.createdAt).toLocaleDateString()}
+              </TableCell>
+              <TableCell className="text-right">
+                <EditUserDialog user={user} />
               </TableCell>
             </TableRow>
           ))}

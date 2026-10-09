@@ -1,10 +1,11 @@
 import { isAPIError } from "better-auth/api";
 import { Router, type ErrorRequestHandler } from "express";
-import type { CreateUserResponse, UsersListResponse } from "shared/api-types";
-import { createUserSchema } from "shared/user-validation";
+import type { CreateUserResponse, UpdateUserResponse, UsersListResponse } from "shared/api-types";
+import { createUserSchema, updateUserSchema } from "shared/user-validation";
 import type { UserRole } from "shared/user-types";
-import { createSignUpAuth } from "../auth.ts";
+import { auth, createSignUpAuth } from "../auth.ts";
 import { prisma } from "../db.ts";
+import { Prisma } from "../generated/prisma/client.js";
 import { requireAdmin } from "../middleware/require-admin.ts";
 
 export const usersRouter: Router = Router();
@@ -50,11 +51,84 @@ usersRouter.post("/", requireAdmin, async (req, res) => {
   res.status(201).json(body);
 });
 
+usersRouter.patch<{ id: string }>("/:id", requireAdmin, async (req, res) => {
+  const parsed = updateUserSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid request" });
+    return;
+  }
+
+  const { id } = req.params;
+  const existing = await prisma.user.findUnique({ where: { id }, select: { id: true } });
+  if (!existing) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const ctx = await auth.$context;
+
+  if (parsed.data.password) {
+    // Sign-in only ever consults the `credential` account row, so a user
+    // without one has no password to change -- bail before writing anything.
+    const credential = await ctx.internalAdapter.findCredentialAccount(id);
+    if (!credential) {
+      res.status(409).json({ error: "This user has no password sign-in to update" });
+      return;
+    }
+  }
+
+  // Hash before any write, so a hashing failure can't leave name/email applied
+  // against a stale password. `ctx.password.hash` is the hasher this instance is
+  // actually configured with, so sign-in verifies against it.
+  const passwordHash = parsed.data.password ? await ctx.password.hash(parsed.data.password) : null;
+
+  // Only validated fields are written -- zod strips unknown keys, so a client
+  // that posts `role` can't escalate anyone. The email is already lowercased by
+  // the schema, matching how Better Auth stores and looks up emails.
+  // `emailVerified` is deliberately left alone: no email verification flow is
+  // configured in this app, so resetting it would be dead ceremony.
+  const user = await prisma.user.update({
+    where: { id },
+    data: { name: parsed.data.name, email: parsed.data.email },
+    select: { id: true, name: true, email: true, role: true, createdAt: true },
+  });
+
+  if (passwordHash) {
+    // Better Auth's own internal adapter rather than a direct
+    // `prisma.account.updateMany`, so the providerId/accountId convention for
+    // credential accounts stays Better Auth's business.
+    await ctx.internalAdapter.updatePassword(id, passwordHash);
+
+    // Rotating the credential should invalidate sessions established with the
+    // old one -- except the acting admin's own, so changing your own password
+    // doesn't sign you out mid-request. `req.session` is always set here;
+    // `requireAdmin` assigns it before calling next(). The non-null assertion
+    // matters: Prisma reads `{ not: undefined }` as *no filter*, which would
+    // delete the acting admin's session too.
+    await prisma.session.deleteMany({
+      where: { userId: id, id: { not: req.session!.session.id } },
+    });
+  }
+
+  const body: UpdateUserResponse = {
+    user: { ...user, role: user.role as UserRole, createdAt: user.createdAt.toISOString() },
+  };
+  res.json(body);
+});
+
 // Express 5 forwards a rejected promise from the route handler above here
 // automatically, so it doesn't need its own try/catch to reach this. Scoped
 // to this router, so it only intercepts errors from these user routes.
 const handleDuplicateEmail: ErrorRequestHandler = (error, _req, res, next) => {
-  if (isAPIError(error) && DUPLICATE_EMAIL_CODES.includes(error.body?.code as string)) {
+  const isBetterAuthDuplicate =
+    isAPIError(error) && DUPLICATE_EMAIL_CODES.includes(error.body?.code as string);
+  // PATCH writes the email through Prisma rather than Better Auth, so a
+  // collision surfaces as the DB's own unique-constraint violation instead of
+  // an APIError. `user.email` is the only unique index these routes touch.
+  const isPrismaDuplicate =
+    error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+
+  if (isBetterAuthDuplicate || isPrismaDuplicate) {
     res.status(409).json({ error: "A user with this email already exists" });
     return;
   }

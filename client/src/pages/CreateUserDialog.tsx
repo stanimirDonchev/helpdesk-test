@@ -14,8 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { UserFormFields } from '@/components/UserFormFields'
 
 export function CreateUserDialog() {
   const [open, setOpen] = useState(false)
@@ -65,52 +64,7 @@ export function CreateUserDialog() {
         </DialogHeader>
 
         <form className="flex flex-col gap-4.5" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              autoComplete="name"
-              aria-invalid={errors.name ? 'true' : 'false'}
-              {...register('name')}
-            />
-            {errors.name && (
-              <p className="text-[0.8125rem] text-destructive" role="alert">
-                {errors.name.message}
-              </p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              aria-invalid={errors.email ? 'true' : 'false'}
-              {...register('email')}
-            />
-            {errors.email && (
-              <p className="text-[0.8125rem] text-destructive" role="alert">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              aria-invalid={errors.password ? 'true' : 'false'}
-              {...register('password')}
-            />
-            {errors.password && (
-              <p className="text-[0.8125rem] text-destructive" role="alert">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
+          <UserFormFields register={register} errors={errors} idPrefix="create-user" />
 
           {formError && (
             <p className="rounded-lg bg-destructive/10 px-3 py-2.5 text-sm text-destructive" role="alert">

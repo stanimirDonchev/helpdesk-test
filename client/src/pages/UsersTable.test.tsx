@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 import { expect, test, vi } from 'vitest'
 import { renderWithQueryClient } from '../test/render-with-query'
@@ -79,4 +80,46 @@ test('shows an error state when the fetch fails', async () => {
   renderWithQueryClient(<UsersTable />)
 
   expect(await screen.findByText('Failed to load users.')).toBeInTheDocument()
+})
+
+test('renders a column header for the row actions', async () => {
+  vi.mocked(axios.get).mockResolvedValue({ data: { users: mockUsers } })
+
+  renderWithQueryClient(<UsersTable />)
+  await screen.findByText('Ada Admin')
+
+  expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument()
+})
+
+test('reserves the actions column while loading', () => {
+  vi.mocked(axios.get).mockReturnValue(new Promise(() => {}))
+
+  renderWithQueryClient(<UsersTable />)
+
+  expect(screen.getAllByRole('columnheader')).toHaveLength(5)
+})
+
+test('renders an edit button for each user', async () => {
+  vi.mocked(axios.get).mockResolvedValue({ data: { users: mockUsers } })
+
+  renderWithQueryClient(<UsersTable />)
+  await screen.findByText('Ada Admin')
+
+  expect(screen.getByRole('button', { name: 'Edit Ada Admin' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Edit Gene Agent' })).toBeInTheDocument()
+})
+
+test('opens the edit dialog populated with the clicked row', async () => {
+  vi.mocked(axios.get).mockResolvedValue({ data: { users: mockUsers } })
+
+  const user = userEvent.setup()
+  renderWithQueryClient(<UsersTable />)
+  await screen.findByText('Gene Agent')
+
+  await user.click(screen.getByRole('button', { name: 'Edit Gene Agent' }))
+
+  expect(await screen.findByRole('dialog')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Edit user' })).toBeInTheDocument()
+  expect(screen.getByLabelText('Name')).toHaveValue('Gene Agent')
+  expect(screen.getByLabelText('Email')).toHaveValue('gene@example.com')
 })
