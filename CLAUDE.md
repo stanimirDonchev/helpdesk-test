@@ -43,6 +43,7 @@ bun run --cwd client test:watch        # vitest watch mode
 bun run --cwd client test -- App.test.tsx   # single file
 bun run test:e2e                       # playwright, from root — isolated test DB + dedicated ports, safe alongside a live dev session; opens an HTML report when done
 bun run test:e2e:ui                    # same isolated setup, but opens Playwright's interactive UI mode instead of running headless
+bun run test:e2e:ui:only               # UI mode with no setup — skips docker/migrate/seed, so it assumes the container is already up and `helpdesk_test` is migrated + seeded (use `test:e2e:ui` on a cold machine)
 ```
 For writing or modifying Playwright e2e tests (`e2e/tests/`), use the `e2e-test-writer` subagent — it owns the full e2e infrastructure detail (isolated test DB, dedicated ports, auth/rate-limit setup, seeded test users).
 
