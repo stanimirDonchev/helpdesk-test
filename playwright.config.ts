@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { INBOUND_WEBHOOK } from './e2e/fixtures/inbound-webhook';
 
 const E2E_SERVER_PORT = 3002;
 const E2E_CLIENT_PORT = 5174;
@@ -28,6 +29,11 @@ export default defineConfig({
         BETTER_AUTH_URL: `http://localhost:${E2E_SERVER_PORT}`,
         TRUSTED_ORIGINS: `http://localhost:${E2E_CLIENT_PORT}`,
         DISABLE_RATE_LIMIT: 'true',
+        // The inbound-email endpoint fails closed without these, so the
+        // webhook specs would get a 503 instead of exercising the route. Shared
+        // with `inbound-email.spec.ts` via the fixture so both sides agree.
+        INBOUND_WEBHOOK_USER: INBOUND_WEBHOOK.user,
+        INBOUND_WEBHOOK_PASSWORD: INBOUND_WEBHOOK.password,
       },
     },
     {

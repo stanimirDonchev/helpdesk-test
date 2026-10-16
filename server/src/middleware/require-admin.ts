@@ -3,7 +3,9 @@ import type { RequestHandler } from "express";
 import { UserRole } from "shared/user-types";
 import { auth } from "../auth.ts";
 
-type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
+// Exported so `require-session.ts` can reuse it instead of re-declaring the
+// `Express.Request` augmentation below, which must exist exactly once.
+export type Session = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
 
 declare global {
   namespace Express {

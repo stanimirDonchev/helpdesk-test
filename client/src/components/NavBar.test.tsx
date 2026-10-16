@@ -42,3 +42,36 @@ test('shows the signed-in user name and signs out', async () => {
 
   expect(await screen.findByText('Login page')).toBeInTheDocument()
 })
+
+test('links an agent to Tickets but not to Users', () => {
+  useSessionMock.mockReturnValue({
+    data: { user: { name: 'Gene Agent', role: 'agent' } },
+    isPending: false,
+  })
+
+  renderNavBar()
+
+  // Working tickets is the agent role, so the link is not admin-gated.
+  expect(screen.getByRole('link', { name: 'Tickets' })).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'Users' })).not.toBeInTheDocument()
+})
+
+test('links an admin to both Tickets and Users', () => {
+  useSessionMock.mockReturnValue({
+    data: { user: { name: 'Ada Admin', role: 'admin' } },
+    isPending: false,
+  })
+
+  renderNavBar()
+
+  expect(screen.getByRole('link', { name: 'Tickets' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Users' })).toBeInTheDocument()
+})
+
+test('shows no Tickets link when nobody is signed in', () => {
+  useSessionMock.mockReturnValue({ data: null, isPending: false })
+
+  renderNavBar()
+
+  expect(screen.queryByRole('link', { name: 'Tickets' })).not.toBeInTheDocument()
+})

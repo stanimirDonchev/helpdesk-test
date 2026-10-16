@@ -5,7 +5,7 @@ Reference: `project-scope.md`, `tech-stack.md`. Phases are meant to be built rou
 ## Phase 0 — Project scaffolding
 
 - [x] Init Bun workspace monorepo (`client` / `server` / `shared`)
-- [ ] `shared` package: Zod schemas + enums for ticket status, category, role, sender type — only the `role` enum exists so far (`shared/src/user-types.ts`, plain const object, not a Zod schema); ticket status/category/sender type not started (Phase 2/4 territory)
+- [x] `shared` package: enums for ticket status, category, role, sender type — `role` in `shared/src/user-types.ts`, ticket status/category/sender type in `shared/src/ticket-types.ts` (plus display-label maps). All plain const objects rather than Zod schemas or Prisma enums, deliberately: the DB columns stay `String`. Zod lives per-shape in `shared/src/user-validation.ts` / `server/src/ingest/postmark-schema.ts` instead of one enum module
 - [ ] Shared TS/ESLint/Prettier config across workspaces — not present: no shared/base `tsconfig`, no ESLint anywhere (client uses `oxlint` standalone instead, per CLAUDE.md), no Prettier config
 - [x] Postgres + `pgvector` via docker-compose for local dev
 - [x] Prisma init in `server`, connect to local Postgres
@@ -27,15 +27,15 @@ Reference: `project-scope.md`, `tech-stack.md`. Phases are meant to be built rou
 
 ## Phase 2 — Core ticket data & CRUD (no AI yet)
 
-- [ ] Prisma schema: `Ticket` (subject, body, status, category, sender email, timestamps) and `Reply` (ticket, senderType, body, createdAt)
-- [ ] Migration + seed sample tickets/replies
-- [ ] API: create ticket (interim endpoint standing in for real email — matches the staged-ingestion decision)
-- [ ] API: list tickets (filter by status/category, sort, pagination)
-- [ ] API: get ticket detail (ticket + reply thread)
+- [x] Prisma schema: `Ticket` (subject, body, status, category, sender email, `messageId`, `source`, timestamps) and `Reply` (ticket, senderType, body, createdAt) — migration `20261009071749_add_tickets`
+- [ ] Migration + seed sample tickets/replies — migration done; no sample-data seed (tickets arrive via the webhook)
+- [x] API: create ticket — landed as the real Postmark webhook (Phase 9) rather than an interim endpoint, so the staged interim path was skipped entirely
+- [x] API: list tickets — `GET /api/tickets`, newest first. Filtering by status/category, sorting and pagination still open
+- [x] API: get ticket detail (ticket + reply thread) — `GET /api/tickets/:id`; the thread is always empty until replies are written
 - [ ] API: post reply, update ticket status
-- [ ] UI: ticket list (table, filters, sorting) with TanStack Table/Query
+- [ ] UI: ticket list (table, filters, sorting) with TanStack Table/Query — read-only table shipped (`client/src/pages/TicketsTable.tsx`, TanStack Query); filters and sorting still open
 - [ ] UI: ticket detail (thread view + reply form)
-- [ ] UI: manual "new ticket" form (dev/demo substitute for inbound email)
+- [ ] UI: manual "new ticket" form — not needed: real inbound email works, so there is nothing to substitute for
 
 ## Phase 3 — Teams & routing
 
@@ -91,17 +91,18 @@ Reference: `project-scope.md`, `tech-stack.md`. Phases are meant to be built rou
 - [ ] Docker production build + docker-compose finalized
 - [ ] Setup docs in README
 
-## Phase 9 — Real email ingestion (deferred)
+## Phase 9 — Real email ingestion (inbound + threading done; outbound open)
 
-- [ ] Pick email provider (SendGrid / Postmark / Mailgun)
-- [ ] Inbound webhook endpoint + signature verification
-- [ ] Map inbound email → ticket creation (reuses Phase 2's create-ticket path)
+- [x] Pick email provider — **Postmark**
+- [x] Inbound webhook endpoint — `POST /api/inbound/postmark`. **Signature verification is not possible:** Postmark does not sign webhooks, so the endpoint uses HTTP Basic auth in the webhook URL (their own documented recommendation) with a timing-safe comparison, and fails closed when unconfigured. IP allowlisting is left as an ops control since Postmark's origin IP can change per attempt
+- [x] Map inbound email → ticket creation — `server/src/ingest/`: a provider payload is normalized to `NormalizedEmail`, then `ingestEmail()` is the single create-ticket path. Idempotent on `messageId`, which is what makes Postmark's retry schedule (up to 10 redeliveries of any non-200) safe
 - [ ] Outbound sending via provider (replaces the Phase 6 stub)
-- [ ] Reply threading via email headers (`Message-ID` / `In-Reply-To`)
+- [x] Reply threading via email headers — `server/src/ingest/threading.ts` parses `Message-ID` / `In-Reply-To` / `References`; `ingestEmail()` appends a `Reply` (customer, `StrippedTextReply` preferred) to the nearest-ancestor ticket, reopens resolved/closed tickets, and is idempotent on the reply's delivery id. Unmatched `In-Reply-To` opens a new ticket
+- [ ] Attachments — Postmark sends them base64-encoded; currently dropped (no `Attachment` model or storage)
 
 ## Open decisions that will surface mid-plan
 
 - Assignment strategy tie-breaks (Phase 3)
 - KB authorship permissions (Phase 5)
 - Auto-send confidence rule refinement beyond fixed per-category (Phase 6)
-- Email provider choice (Phase 9)
+- ~~Email provider choice (Phase 9)~~ — resolved: Postmark

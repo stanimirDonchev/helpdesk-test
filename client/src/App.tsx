@@ -6,6 +6,7 @@ import { Layout } from './components/Layout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
+import { TicketsPage } from './pages/TicketsPage'
 import { UsersPage } from './pages/UsersPage'
 
 const queryClient = new QueryClient()
@@ -19,6 +20,8 @@ const router = createBrowserRouter([
         Component: Layout,
         children: [
           { index: true, Component: HomePage },
+          // Deliberately outside AdminRoute: working tickets is the agent role.
+          { path: 'tickets', Component: TicketsPage },
           {
             Component: AdminRoute,
             children: [{ path: 'users', Component: UsersPage }],

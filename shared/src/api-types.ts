@@ -1,3 +1,4 @@
+import type { SenderType, TicketCategory, TicketStatus } from "./ticket-types";
 import { UserRole } from "./user-types";
 
 export interface HealthResponse {
@@ -39,4 +40,35 @@ export interface UpdateUserResponse {
 
 export interface DeleteUserResponse {
   user: UserSummary;
+}
+
+export interface TicketSummary {
+  id: string;
+  subject: string;
+  senderEmail: string;
+  senderName: string | null;
+  status: TicketStatus;
+  /** Null until Phase 4's AI classification runs. */
+  category: TicketCategory | null;
+  receivedAt: string;
+}
+
+export interface TicketReply {
+  id: string;
+  senderType: SenderType;
+  body: string;
+  createdAt: string;
+}
+
+export interface TicketDetail extends TicketSummary {
+  body: string;
+  replies: TicketReply[];
+}
+
+export interface TicketsListResponse {
+  tickets: TicketSummary[];
+}
+
+export interface TicketResponse {
+  ticket: TicketDetail;
 }

@@ -5,6 +5,7 @@
   "module": "src/index.ts",
   "scripts": {
     "dev": "bun --watch src/index.ts",
+    "test": "bun test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:test": "DATABASE_URL=postgresql://helpdesk:helpdesk@localhost:5432/helpdesk_test prisma migrate deploy",

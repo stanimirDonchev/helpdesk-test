@@ -80,3 +80,52 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+
+model Ticket {
+  id          String   @id @default(uuid())
+  subject     String
+  body        String
+  status      String   @default("open")
+  // Null until Phase 4's classifier exists; nothing guesses a category at
+  // ingest time.
+  category    String?
+  senderEmail String
+  senderName  String?
+  // The provider's message id. Unique and NOT NULL because this is the
+  // idempotency key that makes Postmark's retry schedule (up to 10 redeliveries
+  // of anything that didn't answer 200) safe to receive.
+  messageId   String   @unique
+  // The RFC-822 `Message-ID` header of the original email, which is what a
+  // reply's `In-Reply-To`/`References` point at. Kept separate from
+  // `messageId` above because the provider's delivery id is its own GUID and a
+  // replying client has never seen it. Nullable: mail without the header can't
+  // be threaded onto, only ingested.
+  emailMessageId String? @unique
+  source      String   @default("postmark")
+  receivedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  replies     Reply[]
+
+  @@index([status, receivedAt])
+  @@map("ticket")
+}
+
+model Reply {
+  id         String   @id @default(uuid())
+  ticketId   String
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderType String
+  body       String
+  // Both nullable because a reply written by an agent or the AI has no inbound
+  // email behind it. For an inbound reply: `messageId` is the provider delivery
+  // id (unique, so a redelivery can't append the same reply twice) and
+  // `emailMessageId` is the RFC header, so a reply-to-a-reply can thread onto
+  // this row in turn.
+  messageId      String? @unique
+  emailMessageId String? @unique
+  createdAt  DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+  @@map("reply")
+}
